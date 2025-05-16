@@ -12,7 +12,6 @@ clap = { version = "4.5.38", features = ["derive", "env"] }
 hex = { version = "0.4.3", features = ["serde"] }
 hmac = "0.12.1"
 humantime = "2.2.0"
-humantime-serde = "1.1.1"
 moka = { version = "0.12.10", features = ["sync"] }
 reqwest = { version = "0.12.15", features = ["json"] }
 serde = { version = "1.0.219", features = ["derive"] }
