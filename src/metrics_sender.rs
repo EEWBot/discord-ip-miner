@@ -1,6 +1,6 @@
-use std::time::Duration;
-use std::net::IpAddr;
 use std::collections::HashMap;
+use std::net::IpAddr;
+use std::time::Duration;
 
 use anyhow::{Context, Result};
 use reqwest::header;
@@ -11,22 +11,25 @@ use crate::collector::{Collector, Gauge};
 async fn report(
     client: &reqwest::Client,
     report_in: &url::Url,
-    metrics: &HashMap<IpAddr, Gauge>
+    metrics: &HashMap<IpAddr, Gauge>,
 ) -> Result<()> {
-    let fields: Vec<_> = metrics.iter().map(|(ip, metrics)| {
-        let seen = metrics.count();
-        let best = metrics.latency_ms_best();
-        let avg = metrics.latency_ms_avg();
-        let worst = metrics.latency_ms_worst();
+    let fields: Vec<_> = metrics
+        .iter()
+        .map(|(ip, metrics)| {
+            let seen = metrics.count();
+            let best = metrics.latency_ms_best();
+            let avg = metrics.latency_ms_avg();
+            let worst = metrics.latency_ms_worst();
 
-        json!({
-            "name": ip,
-            "value": format!(
-                "**seen: {seen} times**\nbest: {best}ms\n**avg: {avg}ms**\nworst: {worst}ms"
-            ),
-            "inline": true,
+            json!({
+                "name": ip,
+                "value": format!(
+                    "**seen: {seen} times**\nbest: {best}ms\n**avg: {avg}ms**\nworst: {worst}ms"
+                ),
+                "inline": true,
+            })
         })
-    }).collect();
+        .collect();
 
     let json = json!({
         "embeds": [{

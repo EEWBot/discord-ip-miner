@@ -96,12 +96,7 @@ async fn main() {
         let collector = collector.clone();
 
         async move {
-            metrics_sender::run(
-                &client,
-                &collector,
-                &cli.report_in,
-                &cli.metrics_interval,
-            ).await
+            metrics_sender::run(&client, &collector, &cli.report_in, &cli.metrics_interval).await
         }
     });
 
@@ -126,7 +121,6 @@ async fn main() {
             sender_tx.send(exit_state).unwrap();
         }
     });
-
 
     tokio::select! {
         v = web_rx => tracing::error!("Web Error: {:?}", v.unwrap()),
