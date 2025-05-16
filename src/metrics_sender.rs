@@ -60,7 +60,8 @@ pub async fn run(
 ) {
     let mut interval = tokio::time::interval(*interval);
 
-    let _ = interval.tick().await;
+    // Wait Web Server
+    tokio::time::sleep(Duration::from_secs(600)).await;
 
     loop {
         let _ = interval.tick().await;
