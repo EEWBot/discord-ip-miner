@@ -61,11 +61,12 @@ pub async fn run(
     let mut interval = tokio::time::interval(*interval);
 
     // Wait Web Server
-    tokio::time::sleep(Duration::from_secs(600)).await;
+    tokio::time::sleep(Duration::from_secs(60)).await;
 
     loop {
         let _ = interval.tick().await;
         let metric = collector.metric().await;
+
         if let Err(e) = report(client, report_in, &metric).await {
             tracing::error!("Failed to send new metrics report {e}");
         }

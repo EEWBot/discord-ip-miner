@@ -1,54 +1,51 @@
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use chrono::Utc;
-use reqwest::header;
-use serde_json::json;
 
-use crate::authenticator::Authenticator;
+use crate::request::{JobSender, Request};
 
-async fn send(client: &reqwest::Client, lure_in: &url::Url, target: &url::Url) -> Result<()> {
-    let json = json!({
-        "content": target,
-    });
-
-    client
-        .post(lure_in.to_string())
-        .header(header::CONTENT_TYPE, "application/json")
-        .body(json.to_string())
-        .send()
-        .await
-        .context("Connection Error")?
-        .error_for_status()
-        .context("HTTP Error")?;
-
-    Ok(())
+#[derive(Debug, Clone)]
+pub struct Targets {
+    targets: Vec<url::Url>,
 }
 
-pub async fn run(
-    client: &reqwest::Client,
-    ogp_endpoint: &url::Url,
-    lure_in: &url::Url,
-    interval: &Duration,
-    auth: &Authenticator,
-) {
-    let mut interval = tokio::time::interval(*interval);
+impl Targets {
+    pub fn try_new(path: &Path) -> Result<Self> {
+        let file = File::open(path)?;
 
-    // Wait Web Server
+        let targets: Result<Vec<url::Url>> = BufReader::new(file)
+            .lines()
+            .map(|line| {
+                line.context("Failed to read line")
+                    .and_then(|line| line.parse().context("Failed to parse as URL"))
+            })
+            .map(|v| v)
+            .collect();
+
+        let targets = targets?;
+
+        Ok(Self { targets })
+    }
+}
+
+pub async fn run(sender: JobSender, lure_ins: &Targets, interval: &Duration) {
     tokio::time::sleep(Duration::from_secs(5)).await;
 
+    let mut interval = tokio::time::interval(*interval);
+
     loop {
-        let _ = interval.tick().await;
+        for lure_in in &lure_ins.targets {
+            let _ = interval.tick().await;
 
-        let now = Utc::now();
-        let ts = now.timestamp_millis();
-        let signature = auth.sign(ts);
-
-        let mut target = ogp_endpoint.clone();
-        target.set_query(Some(&format!("t={ts}&s={signature:x}")));
-
-        if let Err(e) = send(client, lure_in, &target).await {
-            tracing::error!("Failed to send lure message {e}");
+            sender
+                .send(Request {
+                    target: lure_in.clone(),
+                })
+                .await
+                .unwrap();
         }
     }
 }

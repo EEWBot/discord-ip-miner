@@ -20,7 +20,7 @@ use crate::collector::Collector;
 #[derive(Debug, Clone)]
 struct AppState {
     timeout: Duration,
-    auth: Authenticator,
+    auth: &'static Authenticator,
     collector: Collector,
     seen: Cache<i64, ()>,
 }
@@ -83,15 +83,14 @@ async fn root() -> Html<&'static str> {
 pub async fn run(
     listen: SocketAddr,
     client_ip_source: ClientIpSource,
-    auth: &Authenticator,
+    auth: &'static Authenticator,
     collector: &Collector,
     timeout: Duration,
 ) -> Result<()> {
     let listener = TcpListener::bind(listen).await?;
     let collector = collector.to_owned();
-    let auth = auth.to_owned();
 
-    let seen = CacheBuilder::new(64).time_to_live(timeout * 2).build();
+    let seen = CacheBuilder::new(1024).time_to_live(timeout * 2).build();
 
     let app = Router::new()
         .route("/", get(root))
