@@ -229,7 +229,7 @@ pub async fn sender(
                     let ts = send_t.timestamp_millis();
                     let signature = auth.sign(ts);
 
-                    ogp_url.set_query(Some(&format!("t={ts}&s={signature:x}")));
+                    ogp_url.set_query(Some(&format!("t={ts}&s={}", hex::encode(signature.as_slice()))));
 
                     Bytes::from(
                         json!({

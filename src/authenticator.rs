@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use hmac::{Hmac, Mac};
-use sha1::{
-    Sha1,
-    digest::generic_array::{GenericArray, typenum::U20},
+use hmac::{
+    Hmac, KeyInit, Mac,
+    digest::{array::Array, typenum::U20},
 };
+use sha1::Sha1;
 
 type HmacSha1 = Hmac<Sha1>;
-pub type Sha1Bytes = GenericArray<u8, U20>;
+pub type Sha1Bytes = Array<u8, U20>;
 
 #[derive(Debug)]
 struct AuthenticatorInner {
