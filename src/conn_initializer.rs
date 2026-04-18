@@ -1,7 +1,7 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddrV4};
 
 use anyhow::{Context, Result as AHResult};
-use hickory_resolver::{Resolver, config::ResolverConfig, name_server::TokioConnectionProvider};
+use hickory_resolver::Resolver;
 
 use crate::limiter::Limiter;
 use crate::metrics::Metrics;
@@ -9,11 +9,7 @@ use crate::request::JobSender;
 use crate::authenticator::Authenticator;
 
 async fn query_discord_ips() -> AHResult<Vec<Ipv4Addr>> {
-    let resolver = Resolver::builder_with_config(
-        ResolverConfig::default(),
-        TokioConnectionProvider::default(),
-    )
-    .build();
+    let resolver = Resolver::builder_tokio().unwrap().build().unwrap();
 
     let mut ips = vec![];
     let response = resolver
